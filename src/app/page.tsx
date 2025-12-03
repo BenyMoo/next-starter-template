@@ -1,6 +1,23 @@
+'use client';
+
+import { useState } from 'react';
 import { Construction, Code, Zap, Rocket } from "lucide-react";
+import { useRouter } from 'next/navigation';
+import VisitorStats from '@/components/VisitorStats';
+import VisitorDetailsModal from '@/components/VisitorDetailsModal';
 
 export default function Home() {
+	const router = useRouter();
+	const [isModalOpen, setIsModalOpen] = useState(false);
+	
+	const handleDemoClick = () => {
+		router.push('/demo');
+	};
+	
+	const handleViewDetails = () => {
+		setIsModalOpen(true);
+	};
+	
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4 overflow-hidden relative">
 			{/* Animated background elements */}
@@ -81,12 +98,27 @@ export default function Home() {
 					<p className="text-gray-300 mb-4">想要获取最新进展？</p>
 					<p className="text-gray-400 text-sm">Want to get the latest updates?</p>
 					<div className="mt-4 flex justify-center">
-						<div className="bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 py-2 rounded-full font-medium hover:from-orange-600 hover:to-pink-600 transition-all duration-300 cursor-pointer">
-							敬请期待 • Stay Tuned
+						<div 
+							onClick={handleDemoClick}
+							className="bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 py-2 rounded-full font-medium hover:from-orange-600 hover:to-pink-600 transition-all duration-300 cursor-pointer hover:scale-105 transform"
+						>
+							链接数据库
 						</div>
 					</div>
 				</div>
+
+				{/* Visitor Stats */}
+				<div className="mt-8 max-w-md mx-auto">
+					<VisitorStats onViewDetails={handleViewDetails} />
+				</div>
 			</div>
+
+			{/* Visitor Details Modal */}
+			<VisitorDetailsModal 
+				isOpen={isModalOpen} 
+				onClose={() => setIsModalOpen(false)} 
+			/>
+
 		</div>
 	);
 }
