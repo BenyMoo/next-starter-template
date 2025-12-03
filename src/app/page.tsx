@@ -102,7 +102,7 @@ export default function Home() {
 							onClick={handleDemoClick}
 							className="bg-gradient-to-r from-orange-500 to-pink-500 text-white px-6 py-2 rounded-full font-medium hover:from-orange-600 hover:to-pink-600 transition-all duration-300 cursor-pointer hover:scale-105 transform"
 						>
-							链接数据库
+							查看数据库
 						</div>
 					</div>
 				</div>

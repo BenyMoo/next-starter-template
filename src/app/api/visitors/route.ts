@@ -131,9 +131,9 @@ export async function GET(request: NextRequest) {
        LIMIT 10`
     );
 
-    const total = (totalResult.rows as any[])[0]?.total || 0;
-    const today = (todayResult.rows as any[])[0]?.today || 0;
-    const recent = recentResult.rows as any[];
+    const total = (('rows' in totalResult ? totalResult.rows : totalResult) as any[])[0]?.total || 0;
+    const today = (('rows' in todayResult ? todayResult.rows : todayResult) as any[])[0]?.today || 0;
+    const recent = ('rows' in recentResult ? recentResult.rows : recentResult) as any[];
 
     return NextResponse.json({
       success: true,

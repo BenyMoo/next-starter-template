@@ -16,7 +16,7 @@ const dbConfig: ConnectionOptions = {
   database: isCloudflareWorker ? (global as any).TIDB_DATABASE || process?.env?.TIDB_DATABASE : process.env.TIDB_DATABASE || 'ue_site',
   // Cloudflare Workers 不支持 Node.js 的 TLS 选项（如 rejectUnauthorized）
   // 在 Cloudflare Workers 环境下，只能使用布尔值来启用/禁用 SSL
-  ssl: (isCloudflareWorker ? (global as any).TIDB_ENABLE_SSL || process?.env?.TIDB_ENABLE_SSL : process.env.TIDB_ENABLE_SSL) === 'true' ? true : undefined,
+  ssl: (isCloudflareWorker ? (global as any).TIDB_ENABLE_SSL || process?.env?.TIDB_ENABLE_SSL : process.env.TIDB_ENABLE_SSL) === 'true' ? {} : undefined,
   connectTimeout: 60000 // 增加超时时间
 };
 

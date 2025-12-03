@@ -50,7 +50,7 @@ export async function getCloudflareConnection() {
       database: config.database,
       // Cloudflare Workers 不支持 Node.js 的 TLS 选项（如 rejectUnauthorized）
       // 只能使用布尔值来启用/禁用 SSL
-      ssl: config.ssl,
+      ssl: config.ssl ? {} : undefined,
       connectTimeout: 60000
     });
 

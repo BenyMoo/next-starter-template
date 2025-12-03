@@ -14,7 +14,8 @@ export async function GET(request: NextRequest) {
 
       // 执行简单查询测试
       const result = await conn.execute('SELECT 1 as test');
-      const testResult = (result.rows as any[])[0].test;
+      const rows = 'rows' in result ? result.rows : result;
+      const testResult = (rows as any[])[0].test;
 
       return NextResponse.json({
         success: true,

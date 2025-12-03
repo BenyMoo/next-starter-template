@@ -93,7 +93,8 @@ export async function testTiDBConnection() {
         const conn = getTiDBConnection();
         const result = await conn.execute('SELECT VERSION() as version');
 
-        const version = result.rows[0]?.version || 'unknown';
+        const rows = 'rows' in result ? result.rows : result;
+        const version = (rows as any[])[0]?.version || 'unknown';
         const method = isCloudflareWorker() ? 'TiDB Serverless (Cloudflare Workers)' : 'TiDB Serverless (Local)';
 
         console.log(`🔌 Connected to TiDB! (Method: ${method}, Version: ${version})`);
