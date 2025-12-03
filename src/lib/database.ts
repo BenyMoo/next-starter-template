@@ -4,17 +4,20 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
+// Cloudflare Worker 环境下需要特殊处理
+const isCloudflareWorker = typeof process === 'undefined' || !process.env;
+
 // Database configuration
 const dbConfig: ConnectionOptions = {
-  host: process.env.TIDB_HOST || 'localhost',
-  port: parseInt(process.env.TIDB_PORT || '4000'),
-  user: process.env.TIDB_USER || 'root',
-  password: process.env.TIDB_PASSWORD || '',
-  database: process.env.TIDB_DATABASE || 'ue_site',
-  ssl: process.env.TIDB_ENABLE_SSL === 'true' ? {
-    rejectUnauthorized: true
+  host: isCloudflareWorker ? (global as any).TIDB_HOST || process?.env?.TIDB_HOST : process.env.TIDB_HOST || 'localhost',
+  port: parseInt((isCloudflareWorker ? (global as any).TIDB_PORT || process?.env?.TIDB_PORT : process.env.TIDB_PORT) || '4000'),
+  user: isCloudflareWorker ? (global as any).TIDB_USER || process?.env?.TIDB_USER : process.env.TIDB_USER || 'root',
+  password: isCloudflareWorker ? (global as any).TIDB_PASSWORD || process?.env?.TIDB_PASSWORD : process.env.TIDB_PASSWORD || '',
+  database: isCloudflareWorker ? (global as any).TIDB_DATABASE || process?.env?.TIDB_DATABASE : process.env.TIDB_DATABASE || 'ue_site',
+  ssl: (isCloudflareWorker ? (global as any).TIDB_ENABLE_SSL || process?.env?.TIDB_ENABLE_SSL : process.env.TIDB_ENABLE_SSL) === 'true' ? {
+    rejectUnauthorized: false // Cloudflare Worker 环境下需要设置为 false
   } : undefined,
-  connectTimeout: 30000
+  connectTimeout: 60000 // 增加超时时间
 };
 
 // Create connection function

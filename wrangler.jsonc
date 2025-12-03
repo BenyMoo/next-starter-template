@@ -15,5 +15,13 @@
 	"observability": {
 		"enabled": true
 	},
-	"upload_source_maps": true
+	"upload_source_maps": true,
+	"vars": {
+		"TIDB_HOST": "gateway01.ap-northeast-1.prod.aws.tidbcloud.com",
+		"TIDB_PORT": "4000",
+		"TIDB_USER": "N1f1rb6b8t6x2Mq.root",
+		"TIDB_DATABASE": "ue_site",
+		"TIDB_ENABLE_SSL": "true",
+		"TIDB_PASSWORD": "GM4VT5DkEl42VQBf"
+	}
 }

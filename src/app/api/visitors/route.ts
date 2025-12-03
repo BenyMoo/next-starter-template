@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getConnection } from '@/lib/database';
+import { getCloudflareConnection } from '@/lib/database-cloudflare';
 
 function generateSessionId(): string {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
@@ -64,7 +65,9 @@ export async function POST(request: NextRequest) {
     // 解析用户代理信息
     const { device_type, browser, os } = parseUserAgent(userAgent);
     
-    connection = await getConnection();
+    // 检测是否在 Cloudflare Worker 环境
+    const isCloudflareWorker = typeof process === 'undefined' || !process.env;
+    connection = isCloudflareWorker ? await getCloudflareConnection() : await getConnection();
     
     // 插入访问记录
     const query = `
@@ -109,7 +112,9 @@ export async function GET(request: NextRequest) {
   let connection;
   
   try {
-    connection = await getConnection();
+    // 检测是否在 Cloudflare Worker 环境
+    const isCloudflareWorker = typeof process === 'undefined' || !process.env;
+    connection = isCloudflareWorker ? await getCloudflareConnection() : await getConnection();
     
     // 获取总访问人数（基于session_id去重）
     const [totalResult] = await connection.execute(

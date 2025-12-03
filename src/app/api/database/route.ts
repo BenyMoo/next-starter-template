@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getConnection } from '@/lib/database';
+import { getCloudflareConnection } from '@/lib/database-cloudflare';
 
 export async function GET(request: NextRequest) {
   let connection;
   
   try {
-    connection = await getConnection();
+    // 检测是否在 Cloudflare Worker 环境
+    const isCloudflareWorker = typeof process === 'undefined' || !process.env;
+    connection = isCloudflareWorker ? await getCloudflareConnection() : await getConnection();
     
     // First, let's see what tables exist
     const [tables] = await connection.execute('SHOW TABLES');
