@@ -1,25 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getHyperdriveConnection } from '@/lib/database-hyperdrive';
+import { getTiDBConnection } from '@/lib/database-tidb-serverless';
 
 export async function GET(request: NextRequest) {
-  let connection;
-
   try {
-    // 使用 Hyperdrive 连接（在 Cloudflare Workers 中）或直接连接（在本地）
-    connection = await getHyperdriveConnection();
+    // 使用 TiDB Serverless Driver（官方推荐方式）
+    const conn = getTiDBConnection();
 
     // First, let's see what tables exist
-    const [tables] = await connection.execute('SHOW TABLES');
+    const tablesResult = await conn.execute('SHOW TABLES');
+    const tables = tablesResult.rows;
 
     if (Array.isArray(tables) && tables.length > 0) {
       // Get the first table name
-      const tableName = Object.values(tables[0])[0];
+      const tableName = Object.values(tables[0])[0] as string;
 
       // Get table structure
-      const [columns] = await connection.execute(`DESCRIBE ${tableName}`);
+      const columnsResult = await conn.execute(`DESCRIBE ${tableName}`);
+      const columns = columnsResult.rows;
 
-      // Get sample data (limit to 10 rows)
-      const [rows] = await connection.execute(`SELECT * FROM ${tableName} LIMIT 10`);
+      // Get sample data (limit to 10 rows)  
+      const dataResult = await conn.execute(`SELECT * FROM ${tableName} LIMIT 10`);
+      const rows = dataResult.rows;
 
       // Format columns to match frontend expectation
       const formattedColumns = (columns as any[]).map(col => ({
@@ -58,9 +59,5 @@ export async function GET(request: NextRequest) {
       error: 'Failed to fetch data from database',
       details: error instanceof Error ? error.message : String(error)
     }, { status: 500 });
-  } finally {
-    if (connection) {
-      await connection.end();
-    }
   }
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getHyperdriveConnection } from '@/lib/database-hyperdrive';
+import { getTiDBConnection } from '@/lib/database-tidb-serverless';
 
 function generateSessionId(): string {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
@@ -52,8 +52,6 @@ function parseUserAgent(userAgent: string | null) {
 }
 
 export async function POST(request: NextRequest) {
-  let connection;
-
   try {
     const { searchParams } = new URL(request.url);
     const userAgent = request.headers.get('user-agent');
@@ -64,8 +62,8 @@ export async function POST(request: NextRequest) {
     // 解析用户代理信息
     const { device_type, browser, os } = parseUserAgent(userAgent);
 
-    // 使用 Hyperdrive 连接（自动适配环境）
-    connection = await getHyperdriveConnection();
+    // 使用 TiDB Serverless Driver
+    const conn = getTiDBConnection();
 
     // 插入访问记录
     const query = `
@@ -73,7 +71,7 @@ export async function POST(request: NextRequest) {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
-    await connection.execute(query, [
+    await conn.execute(query, [
       ipAddress,
       userAgent,
       referer,
@@ -99,32 +97,26 @@ export async function POST(request: NextRequest) {
       error: '记录访问失败',
       details: error instanceof Error ? error.message : String(error)
     }, { status: 500 });
-  } finally {
-    if (connection) {
-      await connection.end();
-    }
   }
 }
 
 export async function GET(request: NextRequest) {
-  let connection;
-
   try {
-    // 使用 Hyperdrive 连接（自动适配环境）
-    connection = await getHyperdriveConnection();
+    // 使用 TiDB Serverless Driver
+    const conn = getTiDBConnection();
 
     // 获取总访问人数（基于session_id去重）
-    const [totalResult] = await connection.execute(
+    const totalResult = await conn.execute(
       'SELECT COUNT(DISTINCT session_id) as total FROM visitors'
     );
 
     // 获取今日访问人数
-    const [todayResult] = await connection.execute(
+    const todayResult = await conn.execute(
       'SELECT COUNT(DISTINCT session_id) as today FROM visitors WHERE DATE(visited_at) = CURDATE()'
     );
 
     // 获取最近访问记录（限制10条，隐藏敏感信息）
-    const [recentResult] = await connection.execute(
+    const recentResult = await conn.execute(
       `SELECT 
         id,
         country,
@@ -139,9 +131,9 @@ export async function GET(request: NextRequest) {
        LIMIT 10`
     );
 
-    const total = (totalResult as any[])[0]?.total || 0;
-    const today = (todayResult as any[])[0]?.today || 0;
-    const recent = recentResult as any[];
+    const total = (totalResult.rows as any[])[0]?.total || 0;
+    const today = (todayResult.rows as any[])[0]?.today || 0;
+    const recent = recentResult.rows as any[];
 
     return NextResponse.json({
       success: true,
@@ -159,9 +151,5 @@ export async function GET(request: NextRequest) {
       error: '获取统计失败',
       details: error instanceof Error ? error.message : String(error)
     }, { status: 500 });
-  } finally {
-    if (connection) {
-      await connection.end();
-    }
   }
 }

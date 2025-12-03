@@ -13,6 +13,7 @@
 	},
 	"dependencies": {
 		"@opennextjs/cloudflare": "1.14.0",
+		"@tidbcloud/serverless": "^0.2.0",
 		"dotenv": "^17.2.3",
 		"lucide-react": "^0.555.0",
 		"mysql2": "^3.15.3",
