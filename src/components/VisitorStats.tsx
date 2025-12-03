@@ -44,26 +44,26 @@ export default function VisitorStats({ onViewDetails }: VisitorStatsProps) {
 
     // 获取统计数据
     const fetchStats = async () => {
-    try {
-      const response = await fetch('/api/visitors');
-      const data = await response.json() as {
-        success: boolean;
-        data?: VisitorStats;
-        error?: string;
-      };
-      
-      if (data.success) {
-        setStats(data.data || null);
-      } else {
-        setError(data.error || '获取统计失败');
+      try {
+        const response = await fetch('/api/visitors');
+        const data = await response.json() as {
+          success: boolean;
+          data?: VisitorStats;
+          error?: string;
+        };
+
+        if (data.success) {
+          setStats(data.data || null);
+        } else {
+          setError(data.error || '获取统计失败');
+        }
+      } catch (error) {
+        setError('网络错误');
+        console.error('获取访问统计失败:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      setError('网络错误');
-      console.error('获取访问统计失败:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
     recordVisit();
     fetchStats();
@@ -107,7 +107,7 @@ export default function VisitorStats({ onViewDetails }: VisitorStatsProps) {
           查看详情
         </button>
       </div>
-      
+
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div className="text-center p-3 bg-white/5 rounded-lg">
           <div className="flex items-center justify-center gap-2 mb-1">
@@ -116,7 +116,7 @@ export default function VisitorStats({ onViewDetails }: VisitorStatsProps) {
           </div>
           <p className="text-white/60 text-xs">总访问人数</p>
         </div>
-        
+
         <div className="text-center p-3 bg-white/5 rounded-lg">
           <div className="flex items-center justify-center gap-2 mb-1">
             <Calendar className="w-4 h-4 text-blue-400" />
@@ -125,7 +125,7 @@ export default function VisitorStats({ onViewDetails }: VisitorStatsProps) {
           <p className="text-white/60 text-xs">今日访问</p>
         </div>
       </div>
-      
+
       {stats.recent && stats.recent.length > 0 && (
         <div className="pt-4 border-t border-white/10">
           <p className="text-white/60 text-sm mb-2">最近访问</p>
@@ -134,7 +134,7 @@ export default function VisitorStats({ onViewDetails }: VisitorStatsProps) {
               <div key={visitor.id} className="flex items-center justify-between text-xs text-white/60">
                 <div className="flex items-center gap-2">
                   <Eye className="w-3 h-3" />
-                  <span>{visitor.city || visitor.region || visitor.country}</span>
+                  <span>{visitor.country || visitor.region || visitor.city}</span>
                 </div>
                 <span>{new Date(visitor.visited_at).toLocaleTimeString()}</span>
               </div>

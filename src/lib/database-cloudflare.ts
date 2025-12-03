@@ -16,12 +16,12 @@ function getEnvVar(key: string): string {
   if (typeof (global as any)[key] !== 'undefined') {
     return (global as any)[key];
   }
-  
+
   // 尝试从 process.env 获取（Node.js 环境）
   if (typeof process !== 'undefined' && process.env && process.env[key]) {
     return process.env[key]!;
   }
-  
+
   throw new Error(`环境变量 ${key} 未设置`);
 }
 
@@ -40,7 +40,7 @@ export function getCloudflareDBConfig(): CloudflareDBConfig {
 // 创建数据库连接（适用于 Cloudflare Worker）
 export async function getCloudflareConnection() {
   const config = getCloudflareDBConfig();
-  
+
   try {
     const connection = await createConnection({
       host: config.host,
@@ -48,12 +48,12 @@ export async function getCloudflareConnection() {
       user: config.user,
       password: config.password,
       database: config.database,
-      ssl: config.ssl ? {
-        rejectUnauthorized: false // Cloudflare Worker 环境下需要设置为 false
-      } : undefined,
+      // Cloudflare Workers 不支持 Node.js 的 TLS 选项（如 rejectUnauthorized）
+      // 只能使用布尔值来启用/禁用 SSL
+      ssl: config.ssl,
       connectTimeout: 60000
     });
-    
+
     console.log('✅ Successfully connected to TiDB database (Cloudflare Worker)');
     return connection;
   } catch (error) {

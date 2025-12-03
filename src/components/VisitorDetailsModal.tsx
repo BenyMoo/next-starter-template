@@ -45,7 +45,7 @@ export default function VisitorDetailsModal({ isOpen, onClose }: VisitorDetailsM
         data?: VisitorDetails;
         error?: string;
       };
-      
+
       if (data.success) {
         setDetails(data.data || null);
       } else {
