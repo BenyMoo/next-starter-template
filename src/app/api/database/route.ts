@@ -29,6 +29,78 @@ export async function GET(request: NextRequest) {
         console.log(`Processing table: ${tableName}`);
 
         try {
+          // Get table structure first
+          console.log(`Getting structure for table: ${tableName}`);
+          let structureResult;
+          try {
+            // Try different approaches to get table structure
+            const approaches = [
+              `DESCRIBE ${tableName}`,
+              `SHOW COLUMNS FROM ${tableName}`,
+              `SHOW CREATE TABLE ${tableName}`,
+              `SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE, COLUMN_DEFAULT, COLUMN_KEY, EXTRA FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '${tableName}'`
+            ];
+            
+            for (const sql of approaches) {
+              try {
+                console.log(`Trying: ${sql}`);
+                structureResult = await conn.execute(sql);
+                console.log(`Success with ${sql}:`, JSON.stringify(structureResult, null, 2));
+                break;
+              } catch (approachError) {
+                console.error(`Failed with ${sql}:`, approachError instanceof Error ? approachError.message : String(approachError));
+                continue;
+              }
+            }
+            
+            if (!structureResult) {
+              console.error(`All table structure queries failed for ${tableName}`);
+            }
+          } catch (describeError) {
+            console.error(`Table structure query failed for ${tableName}:`, describeError);
+            structureResult = null;
+          }
+          
+          let formattedColumns: any[] = [];
+          if (structureResult) {
+            // Use actual table structure from query
+            const rows = 'rows' in structureResult ? structureResult.rows : structureResult;
+            if (rows && Array.isArray(rows) && rows.length > 0) {
+              console.log(`Processing ${rows.length} structure rows for ${tableName}`);
+              formattedColumns = rows.map((row: any) => {
+                console.log(`Structure row:`, JSON.stringify(row, null, 2));
+                return {
+                  field: row.Field || row.field || row.COLUMN_NAME || row.column_name,
+                  type: row.Type || row.type || row.DATA_TYPE || row.data_type || 'UNKNOWN',
+                  null: row.Null || row.null || row.IS_NULLABLE || row.is_nullable || 'YES',
+                  key: row.Key || row.key || row.COLUMN_KEY || row.column_key || '',
+                  default: row.Default !== undefined ? row.Default : (row.default !== undefined ? row.default : (row.COLUMN_DEFAULT || row.column_default || null)),
+                  extra: row.Extra || row.extra || row.EXTRA || row.extra || ''
+                };
+              });
+              console.log(`Processed ${formattedColumns.length} columns for ${tableName}`);
+            } else {
+              console.log(`No rows in structure result for ${tableName}, using fallback`);
+            }
+          } else {
+            console.log(`No structure result for ${tableName}, using fallback`);
+            // Fallback: Get sample data and infer structure
+            const dataResult = await conn.execute(`SELECT * FROM ${tableName} LIMIT 1`);
+            const rows = 'rows' in dataResult ? dataResult.rows : dataResult;
+            
+            if (rows && rows.length > 0) {
+              const firstRow = rows[0];
+              formattedColumns = Object.keys(firstRow).map(key => ({
+                field: key,
+                type: 'UNKNOWN',
+                null: 'YES',
+                key: '',
+                default: null,
+                extra: ''
+              }));
+            }
+          }
+
           // Get sample data (limit to 10 rows)  
           console.log(`Getting data for table: ${tableName}`);
           const dataResult = await conn.execute(`SELECT * FROM ${tableName} LIMIT 10`);
@@ -36,20 +108,6 @@ export async function GET(request: NextRequest) {
           console.log(`SELECT result type for ${tableName}:`, typeof dataResult);
           console.log(`SELECT result has rows property:`, 'rows' in dataResult);
           const rows = 'rows' in dataResult ? dataResult.rows : dataResult;
-
-          // 如果没有列信息，就从数据的第一行推断列名
-          let formattedColumns: any[] = [];
-          if (rows && rows.length > 0) {
-            const firstRow = rows[0];
-            formattedColumns = Object.keys(firstRow).map(key => ({
-              field: key,
-              type: 'UNKNOWN',
-              null: 'YES',
-              key: '',
-              default: null,
-              extra: ''
-            }));
-          }
 
           // Create table data structure that matches frontend expectation
           const tableData = {
