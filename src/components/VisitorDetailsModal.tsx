@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Users, Globe, Monitor, Smartphone, Tablet, Calendar, Clock, MapPin, Eye } from 'lucide-react';
+import { X, Users, Globe, Monitor, Smartphone, Tablet, Calendar, Clock, MapPin, Eye, RefreshCw } from 'lucide-react';
 
 interface VisitorRecord {
   id: number;
@@ -20,6 +20,17 @@ interface VisitorDetails {
   recent: VisitorRecord[];
 }
 
+interface PaginatedVisitors {
+  visitors: VisitorRecord[];
+  pagination: {
+    currentPage: number;
+    pageSize: number;
+    total: number;
+    hasMore: boolean;
+    totalPages: number;
+  };
+}
+
 interface VisitorDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -27,14 +38,33 @@ interface VisitorDetailsModalProps {
 
 export default function VisitorDetailsModal({ isOpen, onClose }: VisitorDetailsModalProps) {
   const [details, setDetails] = useState<VisitorDetails | null>(null);
+  const [paginatedData, setPaginatedData] = useState<PaginatedVisitors | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(20);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
   useEffect(() => {
     if (isOpen) {
       fetchVisitorDetails();
+      fetchPaginatedData();
+
+      // 设置后台自动刷新（每60秒）
+      const refreshInterval = setInterval(() => {
+        fetchVisitorDetails();
+        fetchPaginatedData();
+      }, 60000);
+
+      return () => clearInterval(refreshInterval);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchPaginatedData();
+    }
+  }, [currentPage, isOpen]);
 
   const fetchVisitorDetails = async () => {
     try {
@@ -48,8 +78,9 @@ export default function VisitorDetailsModal({ isOpen, onClose }: VisitorDetailsM
 
       if (data.success) {
         setDetails(data.data || null);
+        setLastUpdate(new Date());
       } else {
-        setError(data.error || '获取详情失败');
+        setError(data.error || '获取统计失败');
       }
     } catch (error) {
       setError('网络错误');
@@ -57,6 +88,30 @@ export default function VisitorDetailsModal({ isOpen, onClose }: VisitorDetailsM
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchPaginatedData = async () => {
+    try {
+      const response = await fetch(`/api/visitors/paginated?page=${currentPage}&pageSize=${pageSize}`);
+      const data = await response.json() as {
+        success: boolean;
+        data?: PaginatedVisitors;
+        error?: string;
+      };
+
+      if (data.success) {
+        setPaginatedData(data.data || null);
+        setLastUpdate(new Date());
+      } else {
+        console.error('获取分页数据失败:', data.error);
+      }
+    } catch (error) {
+      console.error('获取分页访问记录失败:', error);
+    }
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
   };
 
   const getDeviceIcon = (deviceType: string) => {
@@ -82,21 +137,51 @@ export default function VisitorDetailsModal({ isOpen, onClose }: VisitorDetailsM
 
   if (!isOpen) return null;
 
+  const formatLastUpdate = (date: Date) => {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const seconds = Math.floor(diff / 1000);
+    
+    if (seconds < 60) return '刚刚';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}分钟前`;
+    return `${Math.floor(seconds / 3600)}小时前`;
+  };
+
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-gray-900/95 backdrop-blur-sm rounded-xl max-w-4xl w-full max-h-[90vh] overflow-hidden border border-white/20">
         {/* 头部 */}
         <div className="flex items-center justify-between p-6 border-b border-white/10">
-          <div className="flex items-center gap-3">
-            <Users className="w-6 h-6 text-blue-400" />
-            <h2 className="text-xl font-semibold text-white">访问详情</h2>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <Users className="w-6 h-6 text-blue-400" />
+              <h2 className="text-xl font-semibold text-white">访问详情</h2>
+            </div>
+            {lastUpdate && (
+              <span className="text-sm text-white/60">
+                更新: {formatLastUpdate(lastUpdate)}
+              </span>
+            )}
           </div>
-          <button
-            onClick={onClose}
-            className="text-white/60 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                fetchVisitorDetails();
+                fetchPaginatedData();
+              }}
+              className={`p-2 text-white/60 hover:text-white transition-colors rounded-lg hover:bg-white/10 ${loading ? 'animate-spin' : ''}`}
+              title="刷新数据"
+              disabled={loading}
+            >
+              <RefreshCw className="w-5 h-5" />
+            </button>
+            <button
+              onClick={onClose}
+              className="text-white/60 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* 内容 */}
@@ -141,10 +226,19 @@ export default function VisitorDetailsModal({ isOpen, onClose }: VisitorDetailsM
               <div>
                 <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                   <Clock className="w-5 h-5 text-blue-400" />
-                  最近访问记录
+                  访问记录
                 </h3>
+                
+                {/* 分页信息 */}
+                {paginatedData && (
+                  <div className="flex items-center justify-between mb-4 text-sm text-white/60">
+                    <span>第 {currentPage} 页，共 {paginatedData.pagination.totalPages} 页</span>
+                    <span>总计 {paginatedData.pagination.total} 条记录</span>
+                  </div>
+                )}
+
                 <div className="space-y-3">
-                  {details.recent.map((visitor) => {
+                  {paginatedData?.visitors.map((visitor) => {
                     const { date, time } = formatDateTime(visitor.visited_at);
                     return (
                       <div key={visitor.id} className="bg-white/5 rounded-lg p-4 border border-white/10">
@@ -186,6 +280,52 @@ export default function VisitorDetailsModal({ isOpen, onClose }: VisitorDetailsM
                     );
                   })}
                 </div>
+
+                {/* 分页控件 */}
+                {paginatedData && paginatedData.pagination.totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-6">
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage <= 1}
+                      className="px-3 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors text-sm"
+                    >
+                      上一页
+                    </button>
+                    
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: Math.min(5, paginatedData.pagination.totalPages) }, (_, i) => {
+                        const pageNum = Math.max(1, Math.min(
+                          paginatedData.pagination.totalPages - 4,
+                          currentPage - 2
+                        )) + i;
+                        
+                        if (pageNum > paginatedData.pagination.totalPages) return null;
+                        
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => handlePageChange(pageNum)}
+                            className={`px-3 py-2 rounded-lg text-sm transition-colors ${
+                              currentPage === pageNum
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-white/10 hover:bg-white/20 text-white/60'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage >= paginatedData.pagination.totalPages}
+                      className="px-3 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition-colors text-sm"
+                    >
+                      下一页
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ) : null}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Users, Eye, Calendar } from 'lucide-react';
+import { Users, Eye, Calendar, RefreshCw } from 'lucide-react';
 
 interface VisitorStats {
   total: number;
@@ -26,6 +26,7 @@ export default function VisitorStats({ onViewDetails }: VisitorStatsProps) {
   const [stats, setStats] = useState<VisitorStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
 
   useEffect(() => {
     // 记录当前访问
@@ -54,6 +55,7 @@ export default function VisitorStats({ onViewDetails }: VisitorStatsProps) {
 
         if (data.success) {
           setStats(data.data || null);
+          setLastUpdate(new Date());
         } else {
           setError(data.error || '获取统计失败');
         }
@@ -67,6 +69,13 @@ export default function VisitorStats({ onViewDetails }: VisitorStatsProps) {
 
     recordVisit();
     fetchStats();
+
+    // 设置后台自动刷新（每30秒）
+    const refreshInterval = setInterval(() => {
+      fetchStats();
+    }, 30000);
+
+    return () => clearInterval(refreshInterval);
   }, []);
 
   if (loading) {
@@ -93,6 +102,16 @@ export default function VisitorStats({ onViewDetails }: VisitorStatsProps) {
     return null;
   }
 
+  const formatLastUpdate = (date: Date) => {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const seconds = Math.floor(diff / 1000);
+    
+    if (seconds < 60) return '刚刚';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}分钟前`;
+    return `${Math.floor(seconds / 3600)}小时前`;
+  };
+
   return (
     <div className="bg-white/5 backdrop-blur-sm rounded-lg p-6 border border-white/10 hover:bg-white/10 transition-all duration-300">
       <div className="flex items-center justify-between mb-4">
@@ -100,12 +119,38 @@ export default function VisitorStats({ onViewDetails }: VisitorStatsProps) {
           <Users className="w-5 h-5 text-blue-400" />
           <h3 className="text-lg font-semibold text-white">访问统计</h3>
         </div>
-        <button
-          onClick={onViewDetails}
-          className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
-        >
-          查看详情
-        </button>
+        <div className="flex items-center gap-2">
+          {lastUpdate && (
+            <span className="text-xs text-white/50">
+              更新: {formatLastUpdate(lastUpdate)}
+            </span>
+          )}
+          <button
+            onClick={() => {
+              setLoading(true);
+              fetch('/api/visitors')
+                .then(response => response.json())
+                .then(data => {
+                  if (data.success) {
+                    setStats(data.data);
+                    setLastUpdate(new Date());
+                  }
+                })
+                .finally(() => setLoading(false));
+            }}
+            className={`p-1 text-white/60 hover:text-white hover:bg-white/10 rounded transition-colors ${loading ? 'animate-spin' : ''}`}
+            title="刷新数据"
+            disabled={loading}
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+          <button
+            onClick={onViewDetails}
+            className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
+          >
+            查看详情
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-4">
