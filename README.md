@@ -1,22 +1,22 @@
-# Next.js Framework Starter
+# Next.js 框架入门模板
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/next-starter-template)
+[![部署到 Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/next-starter-template)
 
 <!-- dash-content-start -->
 
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app). It's deployed on Cloudflare Workers as a [static website](https://developers.cloudflare.com/workers/static-assets/).
+这是一个使用 [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app) 创建的 [Next.js](https://nextjs.org/) 项目。它作为[静态网站](https://developers.cloudflare.com/workers/static-assets/)部署在 Cloudflare Workers 上。
 
-This template uses [OpenNext](https://opennext.js.org/) via the [OpenNext Cloudflare adapter](https://opennext.js.org/cloudflare), which works by taking the Next.js build output and transforming it, so that it can run in Cloudflare Workers.
+此模板使用 [OpenNext](https://opennext.js.org/) 通过 [OpenNext Cloudflare 适配器](https://opennext.js.org/cloudflare)，它接收 Next.js 构建输出并进行转换，使其能够在 Cloudflare Workers 中运行。
 
 <!-- dash-content-end -->
 
-Outside of this repo, you can start a new project with this template using [C3](https://developers.cloudflare.com/pages/get-started/c3/) (the `create-cloudflare` CLI):
+在此仓库之外，您可以使用 [C3](https://developers.cloudflare.com/pages/get-started/c3/)（`create-cloudflare` CLI）基于此模板创建新项目：
 
 ```bash
 npm create cloudflare@latest -- --template=cloudflare/templates/next-starter-template
 ```
 
-A live public deployment of this template is available at [https://next-starter-template.templates.workers.dev](https://next-starter-template.templates.workers.dev)
+此模板的实时公开部署可在 [https://next-starter-template.templates.workers.dev](https://next-starter-template.templates.workers.dev) 查看
 
 ## 数据库连接方案
 
@@ -106,46 +106,46 @@ const result = await conn.execute('SELECT * FROM visitors');
 3. **数据库迁移**：支持多种连接方式，便于迁移和测试
 4. **性能优化**：使用连接池和适当的索引优化查询性能
 
-## Getting Started
+## 入门指南
 
-First, run:
+首先，运行：
 
 ```bash
 npm install
-# or
+# 或者
 yarn install
-# or
+# 或者
 pnpm install
-# or
+# 或者
 bun install
 ```
 
-Then run the development server (using the package manager of your choice):
+然后运行开发服务器（使用您选择的包管理器）：
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+在浏览器中打开 [http://localhost:3000](http://localhost:3000) 查看结果。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+您可以通过修改 `app/page.tsx` 开始编辑页面。当您编辑文件时，页面会自动更新。
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+此项目使用 [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) 自动优化和加载 Inter，这是一种自定义 Google 字体。
 
-## Deploying To Production
+## 部署到生产环境
 
-| Command                           | Action                                       |
+| 命令 | 操作 |
 | :-------------------------------- | :------------------------------------------- |
-| `npm run build`                   | Build your production site                   |
-| `npm run preview`                 | Preview your build locally, before deploying |
-| `npm run build && npm run deploy` | Deploy your production site to Cloudflare    |
-| `npm wrangler tail`               | View real-time logs for all Workers          |
+| `npm run build` | 构建您的生产站点 |
+| `npm run preview` | 在部署前本地预览您的构建 |
+| `npm run build && npm run deploy` | 将您的生产站点部署到 Cloudflare |
+| `npm wrangler tail` | 查看所有 Workers 的实时日志 |
 
-## Learn More
+## 了解更多
 
-To learn more about Next.js, take a look at the following resources:
+要了解更多关于 Next.js 的信息，请查看以下资源：
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- [Next.js 文档](https://nextjs.org/docs) - 了解 Next.js 功能和 API。
+- [学习 Next.js](https://nextjs.org/learn) - 一个交互式 Next.js 教程。
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+您可以查看 [Next.js GitHub 仓库](https://github.com/vercel/next.js/) - 欢迎您的反馈和贡献！

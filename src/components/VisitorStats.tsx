@@ -131,8 +131,13 @@ export default function VisitorStats({ onViewDetails }: VisitorStatsProps) {
               fetch('/api/visitors')
                 .then(response => response.json())
                 .then(data => {
-                  if (data.success) {
-                    setStats(data.data);
+                  const responseData = data as {
+                    success: boolean;
+                    data?: VisitorStats;
+                    error?: string;
+                  };
+                  if (responseData.success) {
+                    setStats(responseData.data || null);
                     setLastUpdate(new Date());
                   }
                 })

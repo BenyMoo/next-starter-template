@@ -260,10 +260,11 @@ export async function getPaginatedVisitors(
     const visitors = 'rows' in visitorsResult ? visitorsResult.rows : visitorsResult;
     const totalRows = 'rows' in totalResult ? totalResult.rows : totalResult;
     const total = (totalRows as any[])[0]?.total || 0;
-    const hasMore = offset + visitors.length < total;
+    const visitorArray = (visitors as any[]) || [];
+    const hasMore = offset + visitorArray.length < total;
 
     const result = {
-      visitors: (visitors as any[]) || [],
+      visitors: visitorArray,
       total,
       hasMore
     };
